@@ -9,7 +9,8 @@ class ZvukoGram(object):
     """
     Base class for ZvukoGram API
     """
-    
+
+    voices = None
     API_URL = 'https://zvukogram.com/index.php?r=api/%s'
 
     def __init__(self, token: str, email: str, session: Optional[ClientSession]=None):
@@ -46,18 +47,25 @@ class ZvukoGram(object):
             return await response.json(content_type=None)
 
 
-    async def get_voices(self) -> Dict[str, Voice]:
+    async def get_voices(self, no_cache: bool=False) -> Dict[str, Voice]:
         """
         Get list of available voices
 
+        :param bool no_cache: Do not use cache
         :return list[Voice]: Voices list
         """
 
+        if self.voices and not no_cache:
+
+            return self.voices
+
         response = await self._request('voices')
-        return {
+        self.voices = {
             language: [Voice(**voice) for voice in voices]
             for language, voices in response.items()
         }
+
+        return self.voices
 
 
     async def tts(
